@@ -1,4 +1,4 @@
-"""Shared fixtures: a fake telnet router that speaks like the DSL-225 CLI."""
+"""Shared fixtures: a fake telnet router replaying the real DSL-225 (BCM963381) CLI."""
 
 from __future__ import annotations
 
@@ -34,7 +34,7 @@ class FakeRouter:
         self.connections += 1
         self.writers.append(writer)
         try:
-            writer.write(NEGOTIATION + b"\r\nDSL-225\r\nLogin: ")
+            writer.write(NEGOTIATION + b"BCM963381 Broadband Router\r\nLogin: ")
             await writer.drain()
             # Client must refuse both options before sending the username.
             self.negotiation_replies = await reader.readexactly(6)
@@ -47,7 +47,7 @@ class FakeRouter:
                 await writer.drain()
                 await reader.read()
                 return
-            writer.write(b"\r\nWelcome\r\n> ")
+            writer.write(b"\r\n > ")
             await writer.drain()
             if self.drop_after_login:
                 return
@@ -59,7 +59,7 @@ class FakeRouter:
                     return
                 if line == "exit":
                     return
-                writer.write(b"\r\n> ")
+                writer.write(b"\r\n > ")
                 await writer.drain()
         except (asyncio.IncompleteReadError, ConnectionError):
             pass
