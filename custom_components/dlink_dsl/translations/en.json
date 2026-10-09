@@ -1,0 +1,47 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "D-Link DSL router",
+        "description": "Connects over telnet (LAN only). Telnet must be enabled on the router.",
+        "data": {
+          "host": "Host",
+          "port": "Telnet port",
+          "username": "Username",
+          "password": "Password"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Could not reach the router's telnet service.",
+      "invalid_auth": "The router rejected the username or password.",
+      "unknown": "Unexpected error, see the logs."
+    },
+    "abort": {
+      "already_configured": "This router is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "arm_window": "Seconds Reboot stays available after Login"
+        }
+      }
+    }
+  },
+  "entity": {
+    "button": {
+      "login": { "name": "Login" },
+      "reboot": { "name": "Reboot" }
+    },
+    "binary_sensor": {
+      "reboot_armed": { "name": "Reboot Armed" }
+    }
+  },
+  "exceptions": {
+    "invalid_auth": { "message": "The router rejected the username or password." },
+    "cannot_connect": { "message": "Could not reach the router." },
+    "not_logged_in": { "message": "Press Login first; the reboot window has ended." }
+  }
+}
