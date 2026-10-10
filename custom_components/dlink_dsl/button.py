@@ -44,14 +44,13 @@ class DslLoginButton(DslEntity, ButtonEntity):
 
 
 class DslRebootButton(DslEntity, ButtonEntity):
-    """Reboots the router; only available right after a successful login."""
+    """Reboots the router; refuses unless Login armed it moments ago.
+
+    It stays pressable at all times: toggling availability would log every
+    arm and disarm as a "press" in the Activity log.
+    """
 
     _attr_device_class = ButtonDeviceClass.RESTART
-
-    @property
-    def available(self) -> bool:
-        """Only pressable while armed."""
-        return self._session.armed
 
     async def async_press(self) -> None:
         """Send the reboot."""
