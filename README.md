@@ -9,7 +9,7 @@ A single tap can't reboot the router by accident.
 | Entity | What it does |
 |---|---|
 | `button.router_login` | Logs in over telnet and keeps the connection open. This **arms** the Reboot button for a short window (60 s by default). |
-| `button.router_reboot` | **Unavailable** (greyed out) unless armed. Pressing it sends the reboot command on the open connection. |
+| `button.router_reboot` | Sends the reboot command on the open connection **only while armed**. Pressed at any other time it does nothing and shows *"Reboot is not armed. Press Login first…"*; the router is never contacted. |
 | `binary_sensor.router_reboot_armed` | On while armed. Its `expires_at` attribute says when the window ends. |
 
 The session disarms and logs out when any of these happens:
@@ -19,6 +19,8 @@ The session disarms and logs out when any of these happens:
 - the integration is unloaded
 
 Pressing Login again while armed restarts the window.
+
+Reboot stays pressable on purpose: if it greyed out, Home Assistant's Activity log would record every arm and disarm as a "Reboot pressed" entry. To hide it on a dashboard while disarmed, use a card visibility condition on `binary_sensor.router_reboot_armed` being `on`.
 
 The integration only ever sends three things: your username and password, the fixed command `reboot`, and `exit`. The reboot command is a constant in the code (`const.py`) and can't be changed from Home Assistant. There is no way to run any other command.
 

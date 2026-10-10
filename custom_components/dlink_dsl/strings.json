@@ -42,6 +42,6 @@
   "exceptions": {
     "invalid_auth": { "message": "The router rejected the username or password." },
     "cannot_connect": { "message": "Could not reach the router." },
-    "not_logged_in": { "message": "Press Login first; the reboot window has ended." }
+    "not_logged_in": { "message": "Reboot is not armed. Press Login first, then Reboot within the arm window." }
   }
 }

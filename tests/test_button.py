@@ -67,16 +67,20 @@ async def wait_for_state(hass: HomeAssistant, entity_id: str, state: str) -> Non
     assert hass.states.get(entity_id).state == state
 
 
-async def test_reboot_unavailable_until_login(
+async def test_reboot_refused_until_login(
     hass: HomeAssistant, router: FakeRouter
 ) -> None:
     await setup_entry(hass, router)
-    assert hass.states.get(REBOOT).state == STATE_UNAVAILABLE
+    assert hass.states.get(REBOOT).state != STATE_UNAVAILABLE
     assert hass.states.get(ARMED).state == STATE_OFF
+
+    with pytest.raises(HomeAssistantError):
+        await press(hass, REBOOT)
+    # Refused without touching the router.
     assert router.connections == 0
+    assert not router.rebooted
 
     await press(hass, LOGIN)
-    assert hass.states.get(REBOOT).state != STATE_UNAVAILABLE
     armed = hass.states.get(ARMED)
     assert armed.state == STATE_ON
     assert armed.attributes["expires_at"] is not None
@@ -88,8 +92,9 @@ async def test_login_then_reboot(hass: HomeAssistant, router: FakeRouter) -> Non
     await press(hass, REBOOT)
     assert router.rebooted
     assert router.lines == [USERNAME, PASSWORD, "reboot"]
-    assert hass.states.get(REBOOT).state == STATE_UNAVAILABLE
     assert hass.states.get(ARMED).state == STATE_OFF
+    # The button itself never goes unavailable.
+    assert hass.states.get(REBOOT).state != STATE_UNAVAILABLE
 
 
 async def test_failed_login_stays_disarmed(
@@ -98,18 +103,22 @@ async def test_failed_login_stays_disarmed(
     await setup_entry(hass, router, password="wrong")
     with pytest.raises(HomeAssistantError):
         await press(hass, LOGIN)
-    assert hass.states.get(REBOOT).state == STATE_UNAVAILABLE
     assert hass.states.get(ARMED).state == STATE_OFF
+    with pytest.raises(HomeAssistantError):
+        await press(hass, REBOOT)
+    assert not router.rebooted
 
 
 async def test_window_expiry_disarms(hass: HomeAssistant, router: FakeRouter) -> None:
     await setup_entry(hass, router)
     await press(hass, LOGIN)
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=31))
-    await wait_for_state(hass, REBOOT, STATE_UNAVAILABLE)
-    assert hass.states.get(ARMED).state == STATE_OFF
+    await wait_for_state(hass, ARMED, STATE_OFF)
     assert router.lines[-1] == "exit"
+    with pytest.raises(HomeAssistantError):
+        await press(hass, REBOOT)
     assert not router.rebooted
+    assert "reboot" not in router.lines
 
 
 async def test_second_login_reuses_connection(
@@ -125,8 +134,9 @@ async def test_router_drop_disarms(hass: HomeAssistant, router: FakeRouter) -> N
     router.drop_after_login = True
     await setup_entry(hass, router)
     await press(hass, LOGIN)
-    await wait_for_state(hass, REBOOT, STATE_UNAVAILABLE)
-    assert hass.states.get(ARMED).state == STATE_OFF
+    await wait_for_state(hass, ARMED, STATE_OFF)
+    with pytest.raises(HomeAssistantError):
+        await press(hass, REBOOT)
 
 
 async def test_unload_closes_connection(
