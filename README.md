@@ -24,6 +24,46 @@ Reboot stays pressable on purpose: if it greyed out, Home Assistant's Activity l
 
 The integration only ever sends three things: your username and password, the fixed command `reboot`, and `exit`. The reboot command is a constant in the code (`const.py`) and can't be changed from Home Assistant. There is no way to run any other command.
 
+## Dashboard card
+
+A single card where Reboot shows as a grey "Off" row until you press Login, then turns into a **PRESS** button for the arm window. In the dashboard editor: **Add card → Manual**, paste:
+
+```yaml
+type: entities
+title: Router
+icon: mdi:router-network
+show_header_toggle: false
+state_color: true
+entities:
+  - entity: button.router_login
+    name: Login
+    icon: mdi:login
+  - entity: binary_sensor.router_reboot_armed
+    name: Reboot Armed
+    icon: mdi:shield-alert
+  - type: conditional
+    conditions:
+      - entity: binary_sensor.router_reboot_armed
+        state: "on"
+    row:
+      entity: button.router_reboot
+      name: Reboot
+      icon: mdi:restart-alert
+  - type: conditional
+    conditions:
+      - entity: binary_sensor.router_reboot_armed
+        state_not: "on"
+    row:
+      type: simple-entity
+      entity: binary_sensor.router_reboot_armed
+      name: Reboot
+      icon: mdi:restart-off
+      tap_action:
+        action: none
+```
+
+The grey row shows the Reboot Armed state rather than the Reboot button, so tapping it does nothing and the Activity log stays clean. Adjust the entity IDs if yours differ.
+
 ## Requirements
 
 - Telnet enabled on the router's **LAN** side. On D-Link DSL firmware this is usually under *Management → Access Control → Services*.
